@@ -53,16 +53,7 @@ if st.sidebar.button("🤖 AI Generiraj nalogo"):
 st.markdown("### 📖 Otrok naj glasno prebere:")
 st.info(f"## {st.session_state.stavek}")
 
-# 5. MIKROFON IN SNEMANJE ZVOKA Z MEHKO LOGIKO
-st.markdown("### 🎤 Poslušanje")
-if st.button("▶️ KLIKNI IN GOVORI"):
-    prepoznavalnik = sr.Recognizer()
-    
-    # Maksimalno prilagojeni tajmingi za specifičen ali počasen govor
-    prepoznavalnik.pause_threshold = 2.5  
-    prepoznavalnik.energy_threshold = 300  # Bolj občutljiv mikrofon za tišji govor
-    
-   # Prikaže lep gumb z ikono mikrofona neposredno v brskalniku
+# Prikaže lep gumb z ikono mikrofona neposredno v brskalniku
 avdio_posnetek = mic_recorder(start_prompt="Klikni in govori", stop_prompt="Zaustavi snemanje", key="logoped_mic")
 
 if avdio_posnetek:
@@ -72,6 +63,11 @@ if avdio_posnetek:
     # Shranimo jih v datoteko za SpeechRecognition
     with open("posnetek.wav", "wb") as f:
         f.write(zvočni_bajti)
+
+    # Preberemo z recognizerjem
+    with sr.AudioFile("posnetek.wav") as vir_datoteke:
+        avdio_podatki = sr.Recognizer().record(vir_datoteke)
+        # Tukaj naprej teče vaša nespremenjena logika (npr. recognizer.recognize_google...)
 
     # Preberemo z recognizerjem
     with sr.AudioFile("posnetek.wav") as vir_datoteke:
