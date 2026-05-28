@@ -2,3 +2,4 @@ streamlit
 google-genai
 SpeechRecognition
 pyaudio
+streamlit-audio-recorder
