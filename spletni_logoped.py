@@ -3,6 +3,7 @@ from google import genai
 import speech_recognition as sr
 import os
 import difflib  # Za analizo podobnosti besedil
+from audiorecorder import audiorecorder
 
 # 1. NASTAVITEV SPLETNE STRANI
 st.set_page_config(page_title="Pametni AI Logoped", page_icon="🧠", layout="centered")
@@ -61,18 +62,15 @@ if st.button("▶️ KLIKNI IN GOVORI"):
     prepoznavalnik.pause_threshold = 2.5  
     prepoznavalnik.energy_threshold = 300  # Bolj občutljiv mikrofon za tišji govor
     
-    with sr.Microphone() as vir_zvoka:
-        st.warning("🔊 Mikrofon posluša... Govorite sproščeno.")
-        try:
-            prepoznavalnik.adjust_for_ambient_noise(vir_zvoka, duration=0.8)
-            posneti_zvok = prepoznavalnik.listen(vir_zvoka, timeout=10, phrase_time_limit=12)
-            st.text("🔍 Analiziram posnetek...")
-            
-            izgovorjeno = prepoznavalnik.recognize_google(posneti_zvok, language="sl-SI").upper()
-            if izgovorjeno.endswith('.'):
-                izgovorjeno = izgovorjeno[:-1]
-                
-            st.markdown(f"Računalnik je slišal: **{izgovorjeno}**")
+    posnetek = audiorecorder("Klikni za snemanje", "Klikni za zaustavitev")
+
+   if len(posnetek) > 0:
+       # Ko uporabnik zaključi snemanje, zvok shranimo v začasno datoteko
+       posnetek.export("posnetek.wav", format="wav")
+       
+       # Nato to datoteko preberemo s SpeechRecognition
+       with sr.AudioFile("posnetek.wav") as vir_datoteke:
+           avdio_podatki = sr.Recognizer().record(vir_datoteke)
             
             # RAČUNANJE PODOBNOSTI (Fuzzy matching)
             # Razmerje vrne vrednost med 0.0 in 1.0 (npr. 0.85 pomeni 85% uemanje)
