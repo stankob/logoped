@@ -71,7 +71,7 @@ if avdio_posnetek:
 
     # Preberemo z recognizerjem
     with sr.AudioFile("posnetek.wav") as vir_datoteke:
-    avdio_podatki = sr.Recognizer().record(vir_datoteke)
+        avdio_podatki = sr.Recognizer().record(vir_datoteke)
     # Tukaj naprej teče vaša nespremenjena logika (npr. recognizer.recognize_google...)
     # RAČUNANJE PODOBNOSTI (Fuzzy matching)
     # Razmerje vrne vrednost med 0.0 in 1.0 (npr. 0.85 pomeni 85% uemanje)
