@@ -66,7 +66,7 @@ if avdio_posnetek:
 
     # Preberemo z recognizerjem
     with sr.AudioFile("posnetek.wav") as vir_datoteke:
-       if avdio_posnetek:
+        if avdio_posnetek:
     # Ko uporabnik konča, vzamemo zvočne bajte (zamik 4 presledki)
     zvočni_bajti = avdio_posnetek['bytes']
 
