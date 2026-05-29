@@ -1,111 +1,92 @@
 import streamlit as st
-from google import genai
+import speech_recognition as r_api  # uvoženo pod r_api za jasnost
 import speech_recognition as sr
-import os
-import difflib  # Za analizo podobnosti besedil
 from streamlit_mic_recorder import mic_recorder
+import difflib
+from google import genai
+from google.genai import types
 
-# 1. NASTAVITEV SPLETNE STRANI
-st.set_page_config(page_title="Pametni AI Logoped", page_icon="🧠", layout="centered")
+# 1. Nastavitev naslova aplikacije
+st.title("Pametni AI Logopedski Asistent")
+st.write("Aplikacija za preverjanje pravilnosti izgovarjave s pomočjo umetne inteligence.")
 
-st.title("🧠 Pametni AI Logopedski Asistent")
-st.write("Različica z mehko logiko primerjave (odpušča drobne šume in nepopolno izgovorjavo).")
+# 2. Vnos API ključa na strani (zaradi varnosti v oblaku)
+gemini_key = st.text_input("Vpišite vaš Google Gemini API ključ:", type="password")
 
-# 2. VARNOST IN API KLJUČ
-if os.path.exists("gemini_api_key.txt"):
-    with open("gemini_api_key.txt", "r") as f:
-        api_key = f.read().strip()
-elif "gemini_api_key" in st.secrets:
-    api_key = st.secrets["gemini_api_key"]
+if not gemini_key:
+    st.warning("Za delovanje aplikacije prosim vpišite svoj Gemini API ključ.")
 else:
-    api_key = st.text_input("Vnesi svoj Gemini API ključ:", type="password")
+    # Pobuda za uporabnika (stavek, ki ga mora ponoviti)
+    if 'stavek' not in st.session_state:
+        st.session_state.stavek = "Riba raca rak, hitro teče v potok."
 
-if not api_key:
-    st.warning("Za delovanje vnesite Google Gemini API ključ.")
-    st.stop()
+    st.subheader("Naloga za pacienta:")
+    st.info(f"Prosim, jasno preberite naslednji stavek: **\"{st.session_state.stavek}\"**")
 
-client = genai.Client(api_key=api_key)
+    st.write("---")
+    st.write("Kliknite spodnji gumb, izgovorite stavek in ko zaključite, kliknite 'Zaustavi snemanje'.")
 
-# 3. NASTAVITVE ZA LOGOPEDA
-st.sidebar.header("🎛️ Nastavitve")
-glas = st.sidebar.selectbox("Glas za vadbo:", ["R", "Š", "Č", "Ž", "Z", "S", "L"])
-tema = st.sidebar.text_input("Tema nalog:", "vesolje")
-
-if "stavek" not in st.session_state:
-    st.session_state.stavek = "--- Klikni gumb za generiranje naloge ---"
-
-if st.sidebar.button("🤖 AI Generiraj nalogo"):
-    sistemski_prompt = (
-        f"Deluješ kot strokovni logopedski asistent za slovenski jezik. "
-        f"Ustvari natanko EN kratek, preprost stavek primeren za otroka starosti 5-7 let. "
-        f"Stavek mora intenzivno trenirati glas '{glas}' (čim več besed s to črko). "
-        f"Vsebina mora biti strogo povezana z motivom: '{tema}'. "
-        f"Vrni IZKLUČNO le stavek, napisan z VELIKIMI ČRKAMI, brez pik in narekovajev."
+    # 3. Spletni snemalnik zvoka
+    avdio_posnetek = mic_recorder(
+        start_prompt="🎤 Klikni in govori", 
+        stop_prompt="🛑 Zaustavi snemanje", 
+        key="logoped_mic"
     )
-    with st.spinner("AI razmišlja..."):
-        try:
-            odgovor = client.models.generate_content(model='gemini-2.5-flash', contents=sistemski_prompt)
-            st.session_state.stavek = odgovor.text.strip().upper()
-        except Exception as e:
-            st.error(f"Napaka pri povezavi z AI: {e}")
 
-# 4. OSREDNJI VIZUALNI ZASLON ZA OTROKA
-st.markdown("### 📖 Otrok naj glasno prebere:")
-st.info(f"## {st.session_state.stavek}")
+    if avdio_posnetek:
+        # Pridobivanje posnetih bajtov
+        zvočni_bajti = avdio_posnetek['bytes']
 
-# Prikaže lep gumb z ikono mikrofona neposredno v brskalniku
-avdio_posnetek = mic_recorder(start_prompt="Klikni in govori", stop_prompt="Zaustavi snemanje", key="logoped_mic")
+        # Shranjevanje v začasno datoteko na strežniku
+        with open("posnetek.wav", "wb") as f:
+            f.write(zvočni_bajti)
 
-if avdio_posnetek:
-    # Ko uporabnik konča, vzamemo zvočne bajte
-    zvočni_bajti = avdio_posnetek['bytes']
-
-    # Shranimo jih v datoteko za SpeechRecognition
-    with open("posnetek.wav", "wb") as f:
-        f.write(zvočni_bajti)
-
-    # Preberemo z recognizerjem
-    with sr.AudioFile("posnetek.wav") as vir_datoteke:
-        if avdio_posnetek:
-    # Ko uporabnik konča, vzamemo zvočne bajte (zamik 4 presledki)
-    zvočni_bajti = avdio_posnetek['bytes']
-
-    # Shranimo jih v datoteko (zamik 4 presledki)
-    with open("posnetek.wav", "wb") as f:
-        f.write(zvočni_bajti) # (zamik 8 presledkov - ker je znotraj with)
-
-    # Preberemo z recognizerjem (zamik 4 presledki)
-    recognizer = sr.Recognizer()
-    with sr.AudioFile("posnetek.wav") as vir_datoteke:
-        # TUKAJ JE BILA NAPAKA! To vrstico morate zamakniti v desno (8 presledkov):
-        avdio_podatki = recognizer.record(vir_datoteke)
+        # Prepoznavanje govora z uporabo SpeechRecognition
+        recognizer = sr.Recognizer()
         
-        # Tudi prepoznava mora biti znotraj tega bloka (8 presledkov):
-        izgovorjeno = recognizer.recognize_google(avdio_podatki, language="sl-SI")
-        # Tukaj naprej teče vaša nespremenjena logika (npr. recognizer.recognize_google...)
+        try:
+            with sr.AudioFile("posnetek.wav") as vir_datoteke:
+                avdio_podatki = recognizer.record(vir_datoteke)
+            
+            # Pretvorba zvoka v tekst preko Google prepoznave (za slovenščino)
+            izgovorjeno = recognizer.recognize_google(avdio_podatki, language="sl-SI")
+            
+            st.success("🤖 Uspešno posneto in prepoznano!")
+            st.write(f"**Prepoznano besedilo:** {izgovorjeno}")
 
-    # Preberemo z recognizerjem
-    with sr.AudioFile("posnetek.wav") as vir_datoteke:
-        avdio_podatki = sr.Recognizer().record(vir_datoteke)
-    # Tukaj naprej teče vaša nespremenjena logika (npr. recognizer.recognize_google...)
-    # RAČUNANJE PODOBNOSTI (Fuzzy matching)
-    # Razmerje vrne vrednost med 0.0 in 1.0 (npr. 0.85 pomeni 85% uemanje)
-    stopnja_ujemanja = difflib.SequenceMatcher(None, st.session_state.stavek, izgovorjeno).ratio()
-    procenti = int(stopnja_ujemanja * 100)
+            # 4. Izračun stopnje ujemanja (Mehka logika / SequenceMatcher)
+            stopnja_ujemanja = difflib.SequenceMatcher(None, st.session_state.stavek.lower(), izgovorjeno.lower()).ratio()
+            procent_ujemanja = int(stopnja_ujemanja * 100)
             
-    st.write(f"Natančnost izgovorjave: **{procenti}%**")
+            st.write(f"**Natančnost izgovarjave (mehka logika):** {procent_ujemanja}%")
+
+            # 5. Podrobna AI analiza z modelom Gemini
+            st.write("---")
+            st.subheader("Logopedska analiza umetne inteligence:")
             
-           # MEHKA MEJA: Če je uemanje nad 70%, priznamo kot uspeh!
-    if stopnja_ujemanja >= 0.70:
-                st.success(f"🌟 ODLIČNO! Uspešno opravljena vaja! ({procenti}% uemanje) 🌟")
-                st.balloons()
-    else:
-                st.error("💪 Blizu je bilo! Poskusimo še enkrat, bolj glasno in razločno.")
-                st.write("Namig: Poskusite vsako besedo izgovoriti nekoliko bolj poudarjeno.")
+            with st.spinner("Umetna inteligenca analizira vaš posnetek..."):
+                # Povezava na Gemini API z vpisanim ključem
+                client = genai.Client(api_key=gemini_key)
                 
-except sr.WaitTimeoutError:
-            st.error("Čas je potekel. Program ni zaznal začetka govora.")
+                navodilo_za_ai = (
+                    f"Deluješ kot strokovni logoped. Pacient je moral prebrati stavek: '{st.session_state.stavek}'. "
+                    f"Sistem za prepoznavo govora je zaznal, da je pacient dejansko izgovoril: '{izgovorjeno}'. "
+                    f"Matematična stopnja ujemanja je {procent_ujemanja}%. "
+                    f"Napiši kratko, spodbudno logopedsko oceno v slovenščini. Izpostavi morebitne napake pri "
+                    f"izgovarjavi glasov (npr. napačne črke, izpuščeni glasovi) in podaj kratek nasvet za vajo."
+                )
+
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=navodilo_za_ai,
+                )
+                
+                # Izpis AI rezultata
+                st.write(response.text)
+
         except sr.UnknownValueError:
-            st.error("Sistem ni uspel pretvoriti zvoka v besedilo. Poskusite govoriti bližje mikrofonu.")
+            st.error("Žal sistem ni uspel razločiti besed. Prosimo, poskusite znova in govorite nekoliko bolj glasno in razločno.")
+        except sr.RequestError as e:
+            st.error(f"Težava s povezavo do storitve za prepoznavo govora: {e}")
         except Exception as e:
-            st.error("Težava z mikrofonom.")
+            st.error(f"Prišlo je do nepričakovane napake pri analizi: {e}")
