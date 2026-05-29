@@ -84,7 +84,7 @@ if avdio_posnetek:
     if stopnja_ujemanja >= 0.70:
                 st.success(f"🌟 ODLIČNO! Uspešno opravljena vaja! ({procenti}% uemanje) 🌟")
                 st.balloons()
-            else:
+    else:
                 st.error("💪 Blizu je bilo! Poskusimo še enkrat, bolj glasno in razločno.")
                 st.write("Namig: Poskusite vsako besedo izgovoriti nekoliko bolj poudarjeno.")
                 
