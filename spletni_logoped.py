@@ -88,7 +88,7 @@ if avdio_posnetek:
                 st.error("💪 Blizu je bilo! Poskusimo še enkrat, bolj glasno in razločno.")
                 st.write("Namig: Poskusite vsako besedo izgovoriti nekoliko bolj poudarjeno.")
                 
-        except sr.WaitTimeoutError:
+except sr.WaitTimeoutError:
             st.error("Čas je potekel. Program ni zaznal začetka govora.")
         except sr.UnknownValueError:
             st.error("Sistem ni uspel pretvoriti zvoka v besedilo. Poskusite govoriti bližje mikrofonu.")
