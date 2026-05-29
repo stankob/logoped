@@ -66,7 +66,22 @@ if avdio_posnetek:
 
     # Preberemo z recognizerjem
     with sr.AudioFile("posnetek.wav") as vir_datoteke:
-        avdio_podatki = sr.Recognizer().record(vir_datoteke)
+       if avdio_posnetek:
+    # Ko uporabnik konča, vzamemo zvočne bajte (zamik 4 presledki)
+    zvočni_bajti = avdio_posnetek['bytes']
+
+    # Shranimo jih v datoteko (zamik 4 presledki)
+    with open("posnetek.wav", "wb") as f:
+        f.write(zvočni_bajti) # (zamik 8 presledkov - ker je znotraj with)
+
+    # Preberemo z recognizerjem (zamik 4 presledki)
+    recognizer = sr.Recognizer()
+    with sr.AudioFile("posnetek.wav") as vir_datoteke:
+        # TUKAJ JE BILA NAPAKA! To vrstico morate zamakniti v desno (8 presledkov):
+        avdio_podatki = recognizer.record(vir_datoteke)
+        
+        # Tudi prepoznava mora biti znotraj tega bloka (8 presledkov):
+        izgovorjeno = recognizer.recognize_google(avdio_podatki, language="sl-SI")
         # Tukaj naprej teče vaša nespremenjena logika (npr. recognizer.recognize_google...)
 
     # Preberemo z recognizerjem
