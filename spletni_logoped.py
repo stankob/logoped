@@ -80,7 +80,7 @@ if avdio_posnetek:
             
     st.write(f"Natančnost izgovorjave: **{procenti}%**")
             
-            # MEHKA MEJA: Če je uemanje nad 70%, priznamo kot uspeh!
+           # MEHKA MEJA: Če je uemanje nad 70%, priznamo kot uspeh!
             if stopnja_ujemanja >= 0.70:
                 st.success(f"🌟 ODLIČNO! Uspešno opravljena vaja! ({procenti}% uemanje) 🌟")
                 st.balloons()
