@@ -17,9 +17,9 @@ jezik = st.sidebar.radio("Izberite jezik / Odaberite jezik:", ("Slovenščina", 
 if jezik == "Slovenščina":
     naslov = "Pametni AI Logopedski Asistent"
     podnaslov = "Aplikacija za preverjanje pravilnosti izgovarjave s pomočjo umetne inteligence."
-    podnaslov_naloga = "Naloga za pacienta:"
-    navodilo_branje = "Prosim, jasno preberite naslednji stavek:"
+    label_vnos = "Uredite ali vpišite poljuben stavek za pacienta:"
     stavek_default = "Riba raca rak, hitro teče v potok."
+    podnaslov_naloga = "Naloga za pacienta:"
     navodilo_gumb = "Kliknite spodnji gumb, izgovorite stavek in ko zaključite, kliknite 'Zaustavi snemanje'."
     gumb_start = "🎤 Klikni in govori"
     gumb_stop = "🛑 Zaustavi snemanje"
@@ -27,7 +27,6 @@ if jezik == "Slovenščina":
     ai_naslov = "Logopedska analiza umetne inteligence:"
     ai_potek = "Umetna inteligenca posluša posnetek in analizira izgovarjavo..."
     
-    # Navodilo za Gemini v slovenščini
     prompt_za_ai = (
         "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno prebere "
         "naslednji stavek: '{stavek}'. "
@@ -38,20 +37,18 @@ if jezik == "Slovenščina":
         "Odgovori izključno v slovenskem jeziku."
     )
 else:
-    # Hrvaški prevodi
     naslov = "Pametni AI Logopedski Asistent"
     podnaslov = "Aplikacija za provjeru pravilnosti izgovora pomoću umjetne inteligencije."
-    podnaslov_naloga = "Zadatak za pacijenta:"
-    navodilo_branje = "Molim, jasno pročitajte sljedeću rečenicu:"
+    label_vnos = "Uredite ili upišite proizvoljnu rečenicu za pacijenta:"
     stavek_default = "Na vrh brda vrba mrda."
+    podnaslov_naloga = "Zadatak za pacijenta:"
     navodilo_gumb = "Kliknite gumb ispod, izgovorite rečenicu i kada završite, kliknite 'Zaustavi snimanje'."
     gumb_start = "🎤 Klikni i govori"
     gumb_stop = "🛑 Zaustavi snimanje"
     uspeh_posneto = "🤖 Uspješno snimljeno!"
     ai_naslov = "Logopedska analiza umjetne inteligencije:"
-    ai_potek = "Umjetna inteligencija sluša snimku i analizira izgovor..."
+    ai_potek = "Umjetna inteligenca sluša snimku i analizira izgovor..."
     
-    # Navodilo za Gemini v hrvaščini
     prompt_za_ai = (
         "Djeluješ kao stručni logoped. Pacijent je dobio zadatak da glasno i jasno pročita "
         "sljedeću rečenicu: '{stavek}'. "
@@ -65,14 +62,13 @@ else:
 # 4. Izris vmesnika na strani
 st.title(naslov)
 st.write(podnaslov)
+st.write("---")
 
-# Shranjevanje stavka v sejo glede na jezik
-if 'trenutni_jezik' not in st.session_state or st.session_state.trenutni_jezik != jezik:
-    st.session_state.trenutni_jezik = jezik
-    st.session_state.stavek = stavek_default
+# Dinamični vnos stavka, ki ga logoped lahko spremeni
+vpisani_stavek = st.text_input(label_vnos, value=stavek_default)
 
 st.subheader(podnaslov_naloga)
-st.info(f"{navodilo_branje} **\"{st.session_state.stavek}\"**")
+st.info(f"**\"{vpisani_stavek}\"**")
 
 st.write("---")
 st.write(navodilo_gumb)
@@ -96,8 +92,8 @@ if avdio_posnetek:
             # Povezava na Gemini API
             client = genai.Client(api_key=gemini_key)
             
-            # Vstavimo trenutni stavek v navodilo
-            končni_prompt = prompt_za_ai.format(stavek=st.session_state.stavek)
+            # Vstavimo dejansko vpisani stavek v navodilo za AI
+            končni_prompt = prompt_za_ai.format(stavek=vpisani_stavek)
 
             # Pošljemo zvok in navodilo modelu
             response = client.models.generate_content(
