@@ -3,3 +3,4 @@ google-genai
 SpeechRecognition
 pyaudio
 streamlit-mic-recorder
+google-cloud-texttospeech
