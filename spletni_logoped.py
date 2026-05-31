@@ -43,14 +43,14 @@ def ustvari_pravilen_govor(tekst, jezik_koda):
         st.error(f"Napaka pri sintezi govora: {e}")
         return None
 
-# 2. Stranski meni: Izbira jezikov in po novem TRIPLE opcija za ciljno skupino
+# 2. Stranski meni: Izbira jezikov (dodana angleščina) in ciljne skupine
 st.sidebar.header("Nastavitve / Postavke / Settings")
 jezik = st.sidebar.radio(
-    "Izberite jezik / Odaberite jezik / Изберете јазик:", 
-    ("Slovenščina", "Hrvatski", "Srpski", "Bosanski", "Македонски")
+    "Izberite jezik / Odaberite jezik / Изберете јазик / Select language:", 
+    ("Slovenščina", "Hrvatski", "Srpski", "Bosanski", "Македонски", "English")
 )
 skupina = st.sidebar.radio(
-    "Komu je namenjena ocena? / Kome je namijenjena ocjena? / За кого е проценката?", 
+    "Komu je namenjena ocena? / Kome je namijenjena ocjena? / За кого е проценката? / Audience:", 
     ("Logoped (Strokovno)", "Starš (Enostavno / Za roditelje)", "Otrok (Igrivo / Za djecu)")
 )
 
@@ -66,9 +66,9 @@ if jezik == "Slovenščina":
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno izgovori: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitacijo. Odgovori izključno v slovenskem jeziku, resno in strokovno."
     elif skupina == "Starš (Enostavno / Za roditelje)":
-        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka. Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktična, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka.  Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktčna, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
     else:
-        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki. Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
 
 elif jezik == "Hrvatski":
     naslov, podnaslov = "Pametni AI Logopedski Asistent", "Aplikacija za provjeru pravilnosti izgovora pomoću umjetne inteligencije."
@@ -111,11 +111,11 @@ elif jezik == "Bosanski":
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = "Djeluješ kao stručni logoped. Pacient je dobio zadatak da glasno i jasno pročita rečenicu: '{stavek}'. Poslušaj snimak i: 1. Tačno zapiši tekst koji čuješ. 2. Stručno procijeni artikulaciju glasova u bosanskom jeziku. 3. Daj preporuku za terapiju. Odgovori u potpunosti na bosanskom jeziku."
     elif skupina == "Starš (Enostavno / Za roditelje)":
-        prompt_za_ai = "Djeluješ kao srdačan logopedski savjetnik koji razgovara sa RODITELJIMA djeteta. Dijete je pokušalo izgovoriti: '{stavek}'. Poslušaj snimak i: 1. Na sasvim jednostavan način, BEZ komplikovanih logopedskih izraza, pojasni roditeljima kako je dijete izgovorilo zadati glas ili riječ. 2. Jasno ukaži gdje je zapelo (npr. ako je glas izgovoren nepravilno). 3. Ponudi 2 jednostavna savjeta kako da to vježbaju kroz svakodnevne aktivnosti kod kuće. Odgovori na bosanskom jeziku."
+        prompt_za_ai = "Djeluješ kao srdačan logopedski savjetnik koji razgovara sa RODITELJIMA djeteta. Dijete je izgovorilo: '{stavek}'. Poslušaj snimak i: 1. Na sasvim jednostavan način, BEZ komplikovanih logopedskih izraza, pojasni roditeljima kako je dijete izgovorilo zadati glas ili riječ. 2. Jasno ukaži gdje je zapelo (npr. ako je glas izgovoren nepravilno). 3. Ponudi 2 jednostavna savjeta kako da to vježbaju kroz svakodnevne aktivnosti kod kuće. Odgovori na bosanskom jeziku."
     else:
         prompt_za_ai = "Djeluješ kao srdačan i zabavan logopedski pomoćnik koji priča direktno sa DJETETOM (u ti-obliku). Dijete je pokušalo pročitati rečenicu: '{stavek}'. Poslušaj snimak i: 1. Pohvali dječiji trud uz emojije (⭐, 🦄, ⚽). 2. Kroz igru mu objasni ako mu je neki glas 'odletio'. 3. Predloži mu zabavnu vježbicu. Odgovori ohrabrujuće na bosanskom jeziku."
 
-else:  # Македонски
+elif jezik == "Македонски":
     naslov, podnaslov = "Паметен АИ Логопедски Асистент", "Апликација за проверка на правилноста на изговорот со помош на вештачка интелигенција."
     label_vnos, stavek_default = "Уреди ја или внеси саканата реченица или глас за пациентот:", "Петар плете пет пати по три прти."
     podnaslov_naloga, gumb_poslusaj = "Задача за пациентот:", "🔊 Слушни го правилниот изговор"
@@ -129,6 +129,21 @@ else:  # Македонски
         prompt_za_ai = "Делуваш како пријателски логопедски советник кој разговара со РОДИТЕЛИТЕ. Детето се обиде да изговори: '{stavek}'. Слушни ја снимката и: 1. На едноставен начин, БЕЗ тешки стручни термини, објасни им на родителите како детето го изговорило гласот или зборот. 2. Јасно посочи каде имало потешкотии. 3. Дај им 2 практични и забавни совети како да вежбаат дома преку игра. Одговори на македонски јазик."
     else:
         prompt_za_ai = "Делуваш како прекрасен, топол и забавен логопедски асистент кој зборува директно со ДЕТЕТО (во ти-форма). Детето се обиде да прочита: '{stavek}'. Слушни ја снимката и: 1. Силно пофали го со многу ентузијазам и емотикони (🌟, 🚀, 🎨). 2. На многу едноставен начин кажи му ако некое гласче му 'побегнало'. 3. Дај му забавна игричка како да го извежба тоа гласче дома. Одговори охрабрувачки на македонски јазик."
+
+else:  # English (NOVO)
+    naslov, podnaslov = "Smart AI Speech Therapy Assistant", "An AI-powered application for evaluating and improving pronunciation accuracy."
+    label_vnos, stavek_default = "Edit or type a custom sentence or sound for the patient:", "The quick brown fox jumps over the lazy dog."
+    podnaslov_naloga, gumb_poslusaj = "Task for the patient:", "🔊 Listen to correct pronunciation"
+    navodilo_gumb, gumb_start, gumb_stop = "Click the button below, speak the sentence clearly, and click 'Stop recording' when finished.", "🎤 Click and Speak", "🛑 Stop recording"
+    uspeh_posneto, ai_naslov, ai_potek = "🤖 Successfully recorded!", "Pronunciation Analysis:", "AI is evaluating the audio..."
+    tts_lang = "en-US"
+    
+    if skupina == "Logoped (Strokovno)":
+        prompt_za_ai = "You are a professional speech-language pathologist (SLP). The patient was tasked with reading aloud: '{stavek}'. Listen to the audio and: 1. Provide an accurate transcription of what you hear. 2. Clinically evaluate phoneme articulation and pronunciation accuracy using standard speech therapy terminology. 3. Provide professional recommendations and corrective exercises. Respond professionally and strictly in English."
+    elif skupina == "Starš (Enostavno / Za roditelje)":
+        prompt_za_ai = "You are a friendly and encouraging speech therapy consultant speaking directly to the child's PARENTS. The child tried to say: '{stavek}'. Listen to the audio and: 1. Explain how well the child pronounced the target sound or word in a very simple way, completely WITHOUT complicated medical jargon. 2. Clearly highlight where they struggled (e.g., missing or substituted sounds). 3. Provide 2 practical, fun tips or daily activities they can do at home to practice together. Respond warmly in English."
+    else:
+        prompt_za_ai = "You are a kind, warm, and playful AI speech assistant speaking directly to the CHILD in the 'you' form. The child tried to read: '{stavek}'. Listen to the audio and: 1. Praise the child's effort with great enthusiasm and lots of fun emojis (🌟, 🏆, 🐸). 2. Explain in a simple, friendly, fairytale-like way if a sound 'tricked' them. 3. Give them 1 fun little game or trick to practice that sound at home. Respond in English."
 
 # 4. Izris vmesnika na strani
 st.title(naslov)
@@ -181,4 +196,4 @@ if avdio_posnetek:
             st.write(response.text)
 
         except Exception as e:
-            st.error(f"Napaka / Грешка: {e}")
+            st.error(f"Napaka / Error: {e}")
