@@ -7,13 +7,12 @@ import requests
 # 1. Branje skritih API ključev iz nastavitev strežnika (Secrets)
 try:
     gemini_key = st.secrets["GEMINI_API_KEY"]
-    # Če TTS ključ ni ločeno nastavljen, sistem poskusi uporabiti primarnega
     tts_key = st.secrets.get("TTS_API_KEY", gemini_key)
 except Exception:
     st.error("Napaka: Ključi niso pravilno nastavljeni v Streamlit Secrets. Prosimo, uredite nastavitve.")
     st.stop()
 
-# Funkcija za Googlovo profesionalno pretvorba besedila v govor (TTS) preko namenskega ključa
+# Funkcija za Googlovo profesionalno pretvorbo besedila v govor (TTS)
 def ustvari_pravilen_govor(tekst, jezik_koda, glas_ime):
     try:
         url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={tts_key}"
@@ -54,11 +53,12 @@ if jezik == "Slovenščina":
     ai_naslov = "Analiza izgovarjave:"
     ai_potek = "Umetna inteligenca posluša posnetek..."
     
-    tts_lang, tts_voice = "sl-SI", "sl-SI-Wavenet-A"
+    # Popravljen uradni slovenski glas
+    tts_lang, tts_voice = "sl-SI", "sl-SI-Standard-A"
     
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = (
-            "Deluješ kot strokovni logoped. Pacient is dobil nalogo, da glasno in jasno prebere "
+            "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno prebere "
             "naslednji stavek: '{stavek}'. Poslušaj posnetek in izvedi naslednje korake:\n"
             "1. Natančno zapiši besedilo, ki ga slišiš.\n"
             "2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo).\n"
@@ -88,7 +88,8 @@ else:
     ai_naslov = "Analiza izgovora:"
     ai_potek = "Umjetna inteligencija sluša snimku..."
     
-    tts_lang, tts_voice = "hr-HR", "hr-HR-Wavenet-B"
+    # Popravljen uradni hrvaški glas
+    tts_lang, tts_voice = "hr-HR", "hr-HR-Standard-A"
     
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = (
@@ -97,12 +98,12 @@ else:
             "1. Točno zapiši tekst koji čuješ.\n"
             "2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku.\n"
             "3. Podaj stručnu ocjenu i koristan savjet za rehabilitaciju.\n\n"
-            "Ogovori isključivo na hrvatskom jeziku, ozbiljno i stručno."
+            "Odgovori isključivo na hrvatskom jeziku, ozbiljno i stručno."
         )
     else:
         prompt_za_ai = (
             "Djeluješ kao drag, topao i razigran logopedski asistent koji govori izravno DJETETU. "
-            "Dijete je i pokušalo pročitati rečenicu: '{stavek}'. Poslušaj snimku i:\n"
+            "Dijete je pokušalo pročitati rečenicu: '{stavek}'. Poslušaj snimku i:\n"
             "1. Pohvali dijete za trud s puno entuzijazma i koristi emojije (npr. 🌟, 🚀, 🦁).\n"
             "2. Na vrlo jednostavan način reci mu ako ga je neki glas 'pobijedio' (npr. 'jezičić je malo zaspao').\n"
             "3. Daj mu jednu jednostavnu, zabavnu igricu ili trik kako može vježbati taj glas.\n\n"
