@@ -4,17 +4,19 @@ from google import genai
 from google.genai import types
 import requests
 
-# 1. Samodejno branje skritega API ključa iz nastavitev strežnika
+# 1. Branje skritih API ključev iz nastavitev strežnika (Secrets)
 try:
     gemini_key = st.secrets["GEMINI_API_KEY"]
+    # Če TTS ključ ni ločeno nastavljen, sistem poskusi uporabiti primarnega
+    tts_key = st.secrets.get("TTS_API_KEY", gemini_key)
 except Exception:
-    st.error("Napaka: API ključ ni nastavljen v Streamlit Secrets. Prosimo, uredite nastavitve.")
+    st.error("Napaka: Ključi niso pravilno nastavljeni v Streamlit Secrets. Prosimo, uredite nastavitve.")
     st.stop()
 
-# Funkcija za Googlovo profesionalno pretvorbo besedila v govor (TTS)
+# Funkcija za Googlovo profesionalno pretvorba besedila v govor (TTS) preko namenskega ključa
 def ustvari_pravilen_govor(tekst, jezik_koda, glas_ime):
     try:
-        url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={gemini_key}"
+        url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={tts_key}"
         payload = {
             "input": {"text": tekst},
             "voice": {"languageCode": jezik_koda, "name": glas_ime},
@@ -52,19 +54,18 @@ if jezik == "Slovenščina":
     ai_naslov = "Analiza izgovarjave:"
     ai_potek = "Umetna inteligenca posluša posnetek..."
     
-    # Nastavitev vrhunskega slovenskega ženskega Wavenet glasu
     tts_lang, tts_voice = "sl-SI", "sl-SI-Wavenet-A"
     
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = (
-            "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno prebere "
+            "Deluješ kot strokovni logoped. Pacient is dobil nalogo, da glasno in jasno prebere "
             "naslednji stavek: '{stavek}'. Poslušaj posnetek in izvedi naslednje korake:\n"
             "1. Natančno zapiši besedilo, ki ga slišiš.\n"
             "2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo).\n"
             "3. Podaj strokovno oceno in koristen nasvet za rehabilitacijo.\n\n"
             "Odgovori izključno v slovenskem jeziku, resno in strokovno."
         )
-    else: # Za otroke
+    else:
         prompt_za_ai = (
             "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM. "
             "Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in:\n"
@@ -74,7 +75,6 @@ if jezik == "Slovenščina":
             "Odgovori izključno v slovenskem jeziku. Govori neposredno otroku (v ti-obliki), izjemno spodbudno."
         )
 else:
-    # Hrvaški prevodi in nastavitve
     naslov = "Pametni AI Logopedski Asistent"
     podnaslov = "Aplikacija za provjeru pravilnosti izgovora pomoću umjetne inteligencije."
     label_vnos = "Uredite ili upišite proizvoljnu rečenicu za pacijenta:"
@@ -88,7 +88,6 @@ else:
     ai_naslov = "Analiza izgovora:"
     ai_potek = "Umjetna inteligencija sluša snimku..."
     
-    # Nastavitev vrhunskega hrvaškega moškega Wavenet glasu
     tts_lang, tts_voice = "hr-HR", "hr-HR-Wavenet-B"
     
     if skupina == "Logoped (Strokovno)":
@@ -98,12 +97,12 @@ else:
             "1. Točno zapiši tekst koji čuješ.\n"
             "2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku.\n"
             "3. Podaj stručnu ocjenu i koristan savjet za rehabilitaciju.\n\n"
-            "Odgovori isključivo na hrvatskom jeziku, ozbiljno i stručno."
+            "Ogovori isključivo na hrvatskom jeziku, ozbiljno i stručno."
         )
-    else: # Za otroke
+    else:
         prompt_za_ai = (
             "Djeluješ kao drag, topao i razigran logopedski asistent koji govori izravno DJETETU. "
-            "Dijete je pokušalo pročitati rečenicu: '{stavek}'. Poslušaj snimku i:\n"
+            "Dijete je i pokušalo pročitati rečenicu: '{stavek}'. Poslušaj snimku i:\n"
             "1. Pohvali dijete za trud s puno entuzijazma i koristi emojije (npr. 🌟, 🚀, 🦁).\n"
             "2. Na vrlo jednostavan način reci mu ako ga je neki glas 'pobijedio' (npr. 'jezičić je malo zaspao').\n"
             "3. Daj mu jednu jednostavnu, zabavnu igricu ili trik kako može vježbati taj glas.\n\n"
@@ -120,7 +119,6 @@ vpisani_stavek = st.text_input(label_vnos, value=stavek_default)
 st.subheader(podnaslov_naloga)
 st.info(f"**\"{vpisani_stavek}\"**")
 
-# GUMB ZA NATIVNO GOVORNO PREDVAJANJE (Google TTS)
 if st.button(gumb_poslusaj):
     with st.spinner("Generiranje čistega govora..."):
         avdio_podatki = ustvari_pravilen_govor(vpisani_stavek, tts_lang, tts_voice)
