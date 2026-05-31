@@ -12,36 +12,42 @@ except Exception:
     st.error("Napaka: Ključi niso pravilno nastavljeni v Streamlit Secrets. Prosimo, uredite nastavitve.")
     st.stop()
 
-# Pametna pretvorba besedila v govor (TTS) z izjemo za makedonščino
+# Napredna pretvorba besedila v govor (TTS) z varnostnim preklopom (Fallback) za makedonščino
 def ustvari_pravilen_govor(tekst, jezik_koda):
     try:
         url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={tts_key}"
         
-        # Priprava osnovne strukture
-        payload = {
-            "input": {"text": tekst},
-            "voice": {
-                "languageCode": jezik_koda
-            },
-            "audioConfig": {"audioEncoding": "MP3"}
-        }
-        
-        # IZJEMA ZA MAKEDONŠČINO: Ker Google striktno zahteva ime, mu podamo edini uradno delujoč glas
+        # Priprava seznama glasov za poskus, če gre za makedonščino
+        glasovi_za_poskus = ["MALE", "FEMALE"]
         if jezik_koda == "mk-MK":
-            payload["voice"]["name"] = "mk-MK-Standard-A"
-        else:
-            # Za ostale jezike deluje dinamična ženska izbira brez fiksnega imena
-            payload["voice"]["ssmlGender"] = "FEMALE"
+            # Google v letu 2026 za mk-MK primarno uporablja Neural2 ali Wavenet serijo
+            glasovi_za_poskus = ["mk-MK-Neural2-A", "mk-MK-Wavenet-A", "mk-MK-Standard-B", "MALE"]
+
+        # Sistem kroži skozi možnosti, dokler ne najde tiste, ki jo Google odobri brez napake 400
+        for glas in glasovi_za_poskus:
+            payload = {
+                "input": {"text": tekst},
+                "voice": {"languageCode": jezik_koda},
+                "audioConfig": {"audioEncoding": "MP3"}
+            }
             
-        response = requests.post(url, json=payload)
+            # Če gre za fiksno ime glasu, ga podamo pod 'name', sicer določimo spol
+            if "-" in glas:
+                payload["voice"]["name"] = glas
+            else:
+                payload["voice"]["ssmlGender"] = glas
+                
+            response = requests.post(url, json=payload)
+            
+            # Če klic uspe (koda 200), takoj vrnemo avdio in prekinemo zanko
+            if response.status_code == 200:
+                import base64
+                audio_content = response.json().get("audioContent", "")
+                return base64.b64decode(audio_content)
         
-        if response.status_code == 200:
-            import base64
-            audio_content = response.json().get("audioContent", "")
-            return base64.b64decode(audio_content)
-        else:
-            st.error(f"Google TTS napaka: {response.text}")
-            return None
+        # Če nobena možnost za makedonščino ne uspe, vrnemo napako zadnjega poskusa
+        st.error(f"Google TTS ni uspel najti aktivnega glasu za kodo {jezik_koda}.")
+        return None
             
     except Exception as e:
         st.error(f"Napaka pri sintezi govora: {e}")
@@ -67,9 +73,9 @@ if jezik == "Slovenščina":
     uspeh_posneto, ai_naslov, ai_potek = "🤖 Uspešno posneto!", "Analiza izgovarjave:", "Umetna inteligenca posluša posnetek..."
     tts_lang = "sl-SI"
     prompt_za_ai = (
-        "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno prebere stavek: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitation. Odgovori izključno v slovenskem jeziku, resno in strokovno."
+        "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno prebere stavek: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitacijo. Odgovori izključno v slovenskem jeziku, resno in strokovno."
         if skupina == "Logoped (Strokovno)" else
-        "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
+        "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali oročka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
     )
 
 elif jezik == "Hrvatski":
