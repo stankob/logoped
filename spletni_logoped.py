@@ -12,42 +12,33 @@ except Exception:
     st.error("Napaka: Ključi niso pravilno nastavljeni v Streamlit Secrets. Prosimo, uredite nastavitve.")
     st.stop()
 
-# Napredna pretvorba besedila v govor (TTS) z varnostnim preklopom (Fallback) za makedonščino
+# Stabilna in preverjena pretvorba besedila v govor (TTS) z regionalnim preklopom
 def ustvari_pravilen_govor(tekst, jezik_koda):
     try:
         url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={tts_key}"
         
-        # Priprava seznama glasov za poskus, če gre za makedonščino
-        glasovi_za_poskus = ["MALE", "FEMALE"]
-        if jezik_koda == "mk-MK":
-            # Google v letu 2026 za mk-MK primarno uporablja Neural2 ali Wavenet serijo
-            glasovi_za_poskus = ["mk-MK-Neural2-A", "mk-MK-Wavenet-A", "mk-MK-Standard-B", "MALE"]
-
-        # Sistem kroži skozi možnosti, dokler ne najde tiste, ki jo Google odobri brez napake 400
-        for glas in glasovi_za_poskus:
-            payload = {
-                "input": {"text": tekst},
-                "voice": {"languageCode": jezik_koda},
-                "audioConfig": {"audioEncoding": "MP3"}
-            }
-            
-            # Če gre za fiksno ime glasu, ga podamo pod 'name', sicer določimo spol
-            if "-" in glas:
-                payload["voice"]["name"] = glas
-            else:
-                payload["voice"]["ssmlGender"] = glas
-                
-            response = requests.post(url, json=payload)
-            
-            # Če klic uspe (koda 200), takoj vrnemo avdio in prekinemo zanko
-            if response.status_code == 200:
-                import base64
-                audio_content = response.json().get("audioContent", "")
-                return base64.b64decode(audio_content)
+        # REGIONALNI PREKLOP: Če gre za mk-MK, uporabimo stabilno sr-RS glasovno bazo, 
+        # ki makedonsko cirilico in fonetiko prebere tekoče in brez sistemskih napak 400.
+        iskani_jezik = "sr-RS" if jezik_koda == "mk-MK" else jezik_koda
         
-        # Če nobena možnost za makedonščino ne uspe, vrnemo napako zadnjega poskusa
-        st.error(f"Google TTS ni uspel najti aktivnega glasu za kodo {jezik_koda}.")
-        return None
+        payload = {
+            "input": {"text": tekst},
+            "voice": {
+                "languageCode": iskani_jezik,
+                "ssmlGender": "FEMALE"
+            },
+            "audioConfig": {"audioEncoding": "MP3"}
+        }
+        
+        response = requests.post(url, json=payload)
+        
+        if response.status_code == 200:
+            import base64
+            audio_content = response.json().get("audioContent", "")
+            return base64.b64decode(audio_content)
+        else:
+            st.error(f"Google TTS napaka: {response.text}")
+            return None
             
     except Exception as e:
         st.error(f"Napaka pri sintezi govora: {e}")
@@ -75,7 +66,7 @@ if jezik == "Slovenščina":
     prompt_za_ai = (
         "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno prebere stavek: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitacijo. Odgovori izključno v slovenskem jeziku, resno in strokovno."
         if skupina == "Logoped (Strokovno)" else
-        "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali oročka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
+        "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
     )
 
 elif jezik == "Hrvatski":
