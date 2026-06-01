@@ -3,6 +3,7 @@ from streamlit_mic_recorder import mic_recorder
 from google import genai
 from google.genai import types
 import requests
+import time  # Potrebno za časovni zamik med ponovnimi poskusi
 
 # 1. Branje skritih API ključev iz nastavitev strežnika (Secrets)
 try:
@@ -43,7 +44,7 @@ def ustvari_pravilen_govor(tekst, jezik_koda):
         st.error(f"Napaka pri sintezi govora: {e}")
         return None
 
-# 2. Stranski meni: Izbira jezikov (dodana španščina) in ciljne skupine
+# 2. Stranski meni: Izbira jezikov in ciljne skupine
 st.sidebar.header("Nastavitve / Postavke / Settings / Configuración")
 jezik = st.sidebar.radio(
     "Izberite jezik / Select language / Seleccione el idioma:", 
@@ -61,6 +62,7 @@ if jezik == "Slovenščina":
     podnaslov_naloga, gumb_poslusaj = "Naloga za pacienta:", "🔊 Poslušaj pravilno izgovarjavo"
     navodilo_gumb, gumb_start, gumb_stop = "Kliknite spodnji gumb, izgovorite stavek in ko zaključite, kliknite 'Zaustavi snemanje'.", "🎤 Klikni in govori", "🛑 Zaustavi snemanje"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 Uspešno posneto!", "Analiza izgovarjave:", "Umetna inteligenca posluša posnetek..."
+    obvestilo_gnezdo = "⚠️ Strežnik je trenutno zaseden (Napaka 503). Avtomatski ponovni poskus čez {} sekundi..."
     tts_lang = "sl-SI"
     
     if skupina == "Logoped (Strokovno)":
@@ -76,10 +78,11 @@ elif jezik == "Hrvatski":
     podnaslov_naloga, gumb_poslusaj = "Zadatak za pacijenta:", "🔊 Poslušaj pravilan izgovor"
     navodilo_gumb, gumb_start, gumb_stop = "Kliknite gumb ispod, izgovorite rečenicu i kada završite, kliknite 'Zaustavi snimanje'.", "🎤 Klikni i govori", "🛑 Zaustavi snimanje"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 Uspješno snimljeno!", "Analiza izgovora:", "Umjetna inteligencija sluša snimku..."
+    obvestilo_gnezdo = "⚠️ Poslužitelj je zauzet (Pogreška 503). Automatski pokušaj ponovno za {} sekunde..."
     tts_lang = "hr-HR"
     
     if skupina == "Logoped (Strokovno)":
-        prompt_za_ai = "Djeluješ kao stručni logoped. Pacijent je dobio zadatak da glasno i jasno pročita rečenicu: '{stavek}'. Poslušaj snimku i: 1. Točno zapiši tekst koji čuješ. 2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku. 3. Podaj stručnu ocjenu i koristan savjet za rehabilitaciju. Odgovori izključivo na hrvatskom jeziku."
+        prompt_za_ai = "Djeluješ kao stručni logoped. Pacijent je dobio zadatak da glasno i jasno pročita rečenicu: '{stavek}'. Poslušaj snimku i: 1. Točno zapiši tekst koji čuješ. 2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku. 3. Podaj stručnu ocjenu i koristan savjet za rehabilitation. Odgovori izključivo na hrvatskom jeziku."
     elif skupina == "Starš (Enostavno / Za roditelje)":
         prompt_za_ai = "Djeluješ kao srdačan logopedski savjetnik koji razgovara s RODITELJIMA djeteta. Dijete je pokušalo izgovoriti: '{stavek}'. Poslušaj snimku i: 1. Na vrlo jednostavan način, BEZ kompliciranih stručnih izraza, objasni roditeljima koliko je dobro dijete izgovorilo zadani glas ili riječ. 2. Jasno ukaži gdje je nastao problem (npr. ako je glas zamijenjen drugim). 3. Daj im 2 praktična savjeta kako mogu vježbati kroz svakodnevnu igru kod kuće. Odgovori na hrvatskom jeziku."
     else:
@@ -91,6 +94,7 @@ elif jezik == "Srpski":
     podnaslov_naloga, gumb_poslusaj = "Zadatak za pacijenta:", "🔊 Poslušaj pravilan izgovor"
     navodilo_gumb, gumb_start, gumb_stop = "Kliknite dugme ispod, izgovorite rečenicu i kada završite, kliknite 'Zaustavi snimanje'.", "🎤 Klikni i govori", "🛑 Zaustavi snimanje"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 Uspešno snimljeno!", "Analiza izgovora:", "Veštačka inteligencija sluša snimak..."
+    obvestilo_gnezdo = "⚠️ Server je trenutno zauzet (Greška 503). Automatski pokušaj ponovo za {} sekunde..."
     tts_lang = "sr-RS"
     
     if skupina == "Logoped (Strokovno)":
@@ -106,6 +110,7 @@ elif jezik == "Bosanski":
     podnaslov_naloga, gumb_poslusaj = "Zadatak za pacijenta:", "🔊 Poslušaj pravilan izgovor"
     navodilo_gumb, gumb_start, gumb_stop = "Kliknite dugme ispod, izgovorite rečenicu i kada završite, kliknite 'Zaustavi snimanje'.", "🎤 Klikni i govori", "🛑 Zaustavi snimanje"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 Uspješno snimljeno!", "Analiza izgovora:", "Vještačka inteligencija sluša snimak..."
+    obvestilo_gnezdo = "⚠️ Server je zauzet (Greška 503). Automatski pokušaj ponovo za {} sekunde..."
     tts_lang = "hr-HR"
     
     if skupina == "Logoped (Strokovno)":
@@ -121,6 +126,7 @@ elif jezik == "Македонски":
     podnaslov_naloga, gumb_poslusaj = "Задача за пациентот:", "🔊 Слушни го правилниот изговор"
     navodilo_gumb, gumb_start, gumb_stop = "Кликнете на копчето подолу, изговорете ја реченицата и кога ќе завршите, кликнете 'Запрете го снимањето'.", "🎤 Кликни и зборувај", "🛑 Запрете го снимањето"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 Успешно снимено!", "Анализа на изговорот:", "Вештачката интелигенција ја слуша снимката..."
+    obvestilo_gnezdo = "⚠️ Серверот е зафатен (Грешка 503). Автоматски обид повторно за {} секунди..."
     tts_lang = "mk-MK"
     
     if skupina == "Logoped (Strokovno)":
@@ -136,6 +142,7 @@ elif jezik == "English":
     podnaslov_naloga, gumb_poslusaj = "Task for the patient:", "🔊 Listen to correct pronunciation"
     navodilo_gumb, gumb_start, gumb_stop = "Click the button below, speak the sentence clearly, and click 'Stop recording' when finished.", "🎤 Click and Speak", "🛑 Stop recording"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 Successfully recorded!", "Pronunciation Analysis:", "AI is evaluating the audio..."
+    obvestilo_gnezdo = "⚠️ Server is busy (Error 503). Retrying automatically in {} seconds..."
     tts_lang = "en-US"
     
     if skupina == "Logoped (Strokovno)":
@@ -145,16 +152,17 @@ elif jezik == "English":
     else:
         prompt_za_ai = "You are a kind, warm, and playful AI speech assistant speaking directly to the CHILD in the 'you' form. The child tried to read: '{stavek}'. Listen to the audio and: 1. Praise the child's effort with great enthusiasm and lots of fun emojis (🌟, 🏆, 🐸). 2. Explain in a simple, friendly, fairytale-like way if a sound 'tricked' them. 3. Give them 1 fun little game or trick to practice that sound at home. Respond in English."
 
-else:  # Español (NOVO)
+else:  # Español
     naslov, podnaslov = "Asistente del Logopeda con IA Inteligente", "Una aplicación impulsada por IA para evaluar y mejorar la precisión de la pronunciación."
     label_vnos, stavek_default = "Edite o escriba una frase o sonido para el paciente:", "El perro de San Roque no tiene rabo porque Ramón Ramírez se lo ha cortado."
     podnaslov_naloga, gumb_poslusaj = "Tarea para el paciente:", "🔊 Escuchar la pronunciación correcta"
     navodilo_gumb, gumb_start, gumb_stop = "Haga clic en el botón de abajo, pronuncie la frase con claridad y haga clic en 'Detener grabación' cuando termine.", "🎤 Hacer clic y hablar", "🛑 Detener grabación"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 ¡Grabación exitosa!", "Análisis de la pronunciación:", "La IA está evaluando el audio..."
+    obvestilo_gnezdo = "⚠️ El servidor está ocupado (Error 503). Reintentando automáticamente en {} segundos..."
     tts_lang = "es-ES"
     
     if skupina == "Logoped (Strokovno)":
-        prompt_za_ai = "Eres un logopeda profesional (terapeuta del habla). El paciente tenía la tarea de leer en voz alta: '{stavek}'. Escucha el audio y: 1. Proporciona una transcripción exacta de lo que escuchas. 2. Evalúa clínicamente la articulación de los fonemas y la precisión de la pronunciación utilizando terminología estándar de logopedia. 3. Brinda recomendaciones profesionales y ejercicios de rehabilitación. Responde profesionalmente y estrictamente en español."
+        prompt_za_ai = "Eres un logopeda profesional (terapeuta del habla). El paciente tenía la tarea de leer en voz alta: '{stavek}'. Escucha el audio and: 1. Proporciona una transcripción exacta de lo que escuchas. 2. Evalúa clínicamente la articulación de los fonemas y la precisión de la pronunciación utilizando terminología estándar de logopedia. 3. Brinda recomendaciones profesionales y ejercicios de rehabilitación. Responde profesionalmente y estrictamente en español."
     elif skupina == "Starš (Enostavno / Za roditelje)":
         prompt_za_ai = "Eres un consultor de logopedia amable y motivador que habla directamente con los PADRES del niño. El niño intentó pronunciar: '{stavek}'. Escucha el audio y: 1. Explica qué tan bien pronunció el niño el sonido o la palabra objetivo de una manera muy simple, completamente SIN jerga médica complicada. 2. Resalta claramente dónde tuvo dificultades (p. ej., sonidos omitidos o sustituidos). 3. Proporciona 2 consejos prácticos y divertidos que puedan hacer juntos en casa todos los días para practicar jugando. Responde con calidez en español."
     else:
@@ -193,22 +201,39 @@ if avdio_posnetek:
     st.write("---")
     st.subheader(ai_naslov)
     
+    # MEHANIZEM ZA PONOVNO POSLJUŠANJE (RETRY) V PRIMERU NAPAKE 503
+    maks_poskusov = 3
+    cas_cakanja = 3  # sekunde
+    uspesno = False
+    
     with st.spinner(ai_potek):
-        try:
-            client = genai.Client(api_key=gemini_key)
-            končni_prompt = prompt_za_ai.format(stavek=vpisani_stavek)
+        for poskus in range(1, maks_poskusov + 1):
+            try:
+                client = genai.Client(api_key=gemini_key)
+                končni_prompt = prompt_za_ai.format(stavek=vpisani_stavek)
 
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=[
-                    types.Part.from_bytes(
-                        data=bytes(zvočni_bajti),
-                        mime_type='audio/wav',
-                    ),
-                    končni_prompt
-                ]
-            )
-            st.write(response.text)
-
-        except Exception as e:
-            st.error(f"Napaka / Error / Error: {e}")
+                response = client.models.generate_content(
+                    model='gemini-2.5-flash',
+                    contents=[
+                        types.Part.from_bytes(
+                            data=bytes(zvočni_bajti),
+                            mime_type='audio/wav',
+                        ),
+                        končni_prompt
+                    ]
+                )
+                st.write(response.text)
+                uspesno = True
+                break  # Če uspe, takoj izstopimo iz zanke
+                
+            except Exception as e:
+                # Preverimo, če gre za preobremenitev strežnika (napaka 503 ali 'high demand')
+                if "503" in str(e) or "demand" in str(e).lower() or "unavailable" in str(e).lower():
+                    if poskus < maks_poskusov:
+                        st.warning(obvestilo_gnezdo.format(cas_cakanja))
+                        time.sleep(cas_cakanja)
+                    else:
+                        st.error(f"Napaka / Error: Strežnik je trajno zaseden. Prosimo, poskusite kasneje. ({e})")
+                else:
+                    st.error(f"Druga napaka / Error: {e}")
+                    break
