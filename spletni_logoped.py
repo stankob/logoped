@@ -55,16 +55,56 @@ skupina = st.sidebar.radio(
     ("Logoped (Strokovno)", "Starš (Enostavno / Za roditelje)", "Otrok (Igrivo / Za djecu)")
 )
 
-# Naslovi za vizualni modul glede na jezik vmesnika
-vizualni_naslovi = {
-    "Slovenščina": ("Vizualna pomoč za izgovarjanje glasu", "Položaj govorilnih organov", "Demonstracija izgovarjave"),
-    "Hrvatski": ("Vizualna pomoć za izgovor glasa", "Položaj govornih organa", "Demonstracija izgovora"),
-    "Srpski": ("Vizualna pomoć za izgovor glasa", "Položaj govornih organa", "Demonstracija izgovora"),
-    "Bosanski": ("Vizualna pomoć za izgovor glasa", "Položaj govornih organa", "Demonstracija izgovora"),
-    "Македонски": ("Визуелна помош за изговор на гласот", "Положба на говорните органи", "Демонстрација на изговорот"),
-    "English": ("Visual speech articulation assistance", "Position of speech organs", "Pronunciation demonstration"),
-    "Español": ("Asistencia visual para la articulación", "Posición de los órganos del habla", "Demostración de pronunciación"),
-    "Italiano": ("Assistenza visiva per l'articolazione", "Posizione degli organi fonatori", "Dimostrazione della pronuncia")
+# Prevodi novih navodil in naslovov za vse jezike
+lokalizacija_mediji = {
+    "Slovenščina": {
+        "navodilo": "💡 Namig: Če želite vaditi posamezni glas (npr. le glas A), ga vpišite v zgornje polje in pritisnite Enter za prikaz vizualne pomoči.",
+        "naslov": "🎬 Vizualna pomoč za izgovarjanje glasu",
+        "slika": "Položaj govorilnih organov",
+        "video": "Demonstracija izgovarjave"
+    },
+    "Hrvatski": {
+        "navodilo": "💡 Savjet: Ako želite vježbati pojedini glas (npr. samo glas A), upišite e-mail u gornje polje i pritisnite Enter za prikaz vizualne pomoći.",
+        "naslov": "🎬 Vizualna pomoć za izgovor glasa",
+        "slika": "Položaj govornih organa",
+        "video": "Demonstracija izgovora"
+    },
+    "Srpski": {
+        "navodilo": "💡 Savet: Ako želite da vežbate pojedinačni glas (npr. samo glas A), upišite ga u gornje polje i pritisnite Enter za prikaz vizualne pomoći.",
+        "naslov": "🎬 Visualna pomoć za izgovor glasa",
+        "slika": "Položaj govornih organa",
+        "video": "Demonstracija izgovora"
+    },
+    "Bosanski": {
+        "navodilo": "💡 Savjet: Ako želite vježbati pojedinačni glas (npr. samo glas A), upišite ga u gornje polje i pritisnite Enter za prikaz vizuelne pomoći.",
+        "naslov": "🎬 Vizuelna pomoć za izgovor glasa",
+        "slika": "Položaj govornih organa",
+        "video": "Demonstracija izgovora"
+    },
+    "Македонски": {
+        "navodilo": "💡 Совет: Ако сакате да вежбате одреден глас (на пр. само гласот А), внесете го во горното поле и притиснете Enter за приказ на визуелна помош.",
+        "naslov": "🎬 Визуелна помош за изговор на гласот",
+        "slika": "Положба на говорните органи",
+        "video": "Демонстрација на изговорот"
+    },
+    "English": {
+        "navodilo": "💡 Tip: If you want to practice an individual sound (e.g., just the sound A), type it in the field above and press Enter to display visual articulation guides.",
+        "naslov": "🎬 Visual speech articulation assistance",
+        "slika": "Position of speech organs",
+        "video": "Pronunciation demonstration"
+    },
+    "Español": {
+        "navodilo": "💡 Consejo: Si desea practicar un sonido individual (por ejemplo, solo el sonido A), escríbalo en el campo de arriba y presione Enter para mostrar las guías visuales.",
+        "naslov": "Asistencia visual para la articulación",
+        "slika": "Posición de los órganos del habla",
+        "video": "Demostración de pronunciación"
+    },
+    "Italiano": {
+        "navodilo": "💡 Suggerimento: Se desideri esercitarti su un singolo suono (es. solo il suono A), inseriscilo nel campo sopra e premi Invio per visualizzare i supporti visivi.",
+        "naslov": "🎬 Assistenza visiva per l'articolazione",
+        "slika": "Posizione degli organi fonatori",
+        "video": "Dimostrazione della pronuncia"
+    }
 }
 
 # 3. Nastavitev lokalizacije in ISO jezikovnih kod za vsak jezik
@@ -80,9 +120,9 @@ if jezik == "Slovenščina":
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno izgovori: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitacijo. Odgovori izključno v slovenskem jeziku, resno in strokovno."
     elif skupina == "Starš (Enostavno / Za roditelje)":
-        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka.  Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktčna, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka. Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktčna, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
     else:
-        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki. Otrok is poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
 
 elif jezik == "Hrvatski":
     naslov, podnaslov = "Pametni AI Logopedski Asistent", "Aplikacija za provjeru pravilnosti izgovora pomoću umjetne inteligencije."
@@ -94,7 +134,7 @@ elif jezik == "Hrvatski":
     tts_lang = "hr-HR"
     
     if skupina == "Logoped (Strokovno)":
-        prompt_za_ai = "Djeluješ kao stručni logoped. Pacijent je dobio zadatak da glasno i jasno pročita rečenicu: '{stavek}'. Poslušaj snimku i: 1. Točno zapiši tekst koji čuješ. 2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku. 3. Podaj stručnu ocjenju i koristan savjet za rehabilitaciju. Odgovori izključivo na hrvatskom jeziku."
+        prompt_za_ai = "Djeluješ kao stručni logoped. Pacijent je dobio zadatak da glasno i jasno pročita rečenicu: '{stavek}'. Poslušaj snimku i: 1. Točno zapiši tekst koji čuješ. 2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku. 3. Podaj stručnu ocjenu i koristan savjet za rehabilitaciju. Odgovori izključivo na hrvatskom jeziku."
     elif skupina == "Starš (Enostavno / Za roditelje)":
         prompt_za_ai = "Djeluješ kao srdačan logopedski savjetnik koji razgovara s RODITELJIMA djeteta. Dijete je pokušalo izgovoriti: '{stavek}'. Poslušaj snimku i: 1. Na vrlo jednostavan način, BEZ kompliciranih stručnih izraza, objasni roditeljima koliko je dobro dijete izgovorilo zadani glas ili riječ. 2. Jasno ukaži gdje je nastao problem (npr. ako je glas zamijenjen drugim). 3. Daj im 2 praktična savjeta kako mogu vježbati kroz svakodnevnu igru kod kuće. Odgovori na hrvatskom jeziku."
     else:
@@ -168,7 +208,7 @@ elif jezik == "Español":
     naslov, podnaslov = "Asistente del Logopeda con IA Inteligente", "Una aplicación impulsada por IA para evaluar y mejorar la precisión de la pronunciación."
     label_vnos, stavek_default = "Edite o escriba una frase o sonido para el paciente:", "El perro de San Roque no tiene rabo porque Ramón Ramírez se lo ha cortado."
     podnaslov_naloga, gumb_poslusaj = "Tarea para el paciente:", "🔊 Escuchar la pronunciación correcta"
-    navodilo_gumb, gumb_start, gumb_stop = "Haga clic en el botón de abajo, pronuncie la frase con claridad y haga clic en 'Detener grabación' cuando termine.", "🎤 Hacer clic y hablar", "🛑 Detener grabación"
+    navodilo_gumb, gumb_start, gumb_stop = "Haga clic en el botón de abajo, pronuncie la frase con claridad and haga clic en 'Detener grabación' cuando termine.", "🎤 Hacer clic y hablar", "🛑 Detener grabación"
     uspeh_posneto, ai_naslov, ai_potek = "🤖 ¡Grabación exitosa!", "Análisis de la pronunciación:", "La IA está evaluando el audio..."
     obvestilo_gnezdo = "⚠️ El servidor está ocupado (Error 503). Reintentando automáticamente en {} segundos..."
     tts_lang = "es-ES"
@@ -176,12 +216,12 @@ elif jezik == "Español":
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = "Eres un logopeda profesional (terapeuta del habla). El paciente tenía la tarea de leer en voz alta: '{stavek}'. Escucha el audio y: 1. Proporciona una transcripción exacta de lo que escuchas. 2. Evalúa clínicamente la articulación de los fonemas y la precisión de la pronunciación utilizando terminología estándar de logopedia. 3. Brinda recomendaciones profesionales y ejercicios de rehabilitación. Responde profesionalmente y estrictamente en español."
     elif skupina == "Starš (Enostavno / Za roditelje)":
-        prompt_za_ai = "Eres un consultor de logopedia amable y motivador que habla directamente con los PADRES del niño. El niño intentó pronunciar: '{stavek}'. Escucha el audio y: 1. Explica qué tan bien pronunció el niño el sonido o la palabra objetivo de una manera muy simple, completamente SIN jerga médica complicada. 2. Resalta claramente dónde tuvo dificultades (p. ej., sonidos u omitidos o sustituidos). 3. Proporciona 2 consejos prácticos y divertidos que puedan hacer juntos en casa todos los días para practicar jugando. Responde con calidez en español."
+        prompt_za_ai = "Eres un consultor de logopedia amable y motivador que habla directamente con los PADRES del niño. El niño intentó pronunciar: '{stavek}'. Escucha el audio y: 1. Explica qué tan bien pronunció el niño el sonido o la palabra objetivo de una manera muy simple, completamente SIN jerga médica complicada. 2. Resalta claramente dónde tuvo dificultades (p. ej., sonidos omitidos o sustituidos). 3. Proporciona 2 consejos prácticos y divertidos que puedan hacer juntos en casa todos los días para practicar jugando. Responde con calidez en español."
     else:
         prompt_za_ai = "Eres un asistente de logopedia con IA amable, cariñoso y divertido que habla directamente al NIÑO (en forma de 'tú'). El niño intentó leer: '{stavek}'. Escucha el audio y: 1. Felicita al niño por su esfuerzo con gran entusiasmo y muchos emojis divertidos (🌟, 🏆, 🐸). 2. Explícale de forma sencilla, amigable y como un cuento de hadas si un sonido le 'jugó una mala pasada'. 3. Dale 1 pequeño juego o truco divertido para practicar ese sonido en casa. Responde en español."
 
 else:  # Italiano
-    naslov, podnaslov = "Assistente Logopedico Intelligente con IA", "Un'applicazione basata su IA per valutare e migliorare l'accuratezza della pronuncia."
+    naslov, podnaslov = "Asistente Logopedico Intelligente con IA", "Un'applicazione basata su IA per valutare e migliorare l'accuratezza della pronuncia."
     label_vnos, stavek_default = "Modifica o inserisci una frase o un suono per il paziente:", "Trentatré trentini entrarono a Trento tutti e trentatré trotterellando."
     podnaslov_naloga, gumb_poslusaj = "Compito per il paziente:", "🔊 Ascolta la pronuncia corretta"
     navodilo_gumb, gumb_start, gumb_stop = "Clicca sul pulsante qui sotto, pronuncia la frase chiaramente e clicca su 'Interrompi registrazione' quando hai finito.", "🎤 Clicca e Parla", "🛑 Interrompi registrazione"
@@ -203,6 +243,9 @@ st.write("---")
 
 vpisani_stavek = st.text_input(label_vnos, value=stavek_default)
 
+# IZPIS PREVEDENEGA NAVODILA POD POLJEM ZA VNOS
+st.caption(lokalizacija_mediji[jezik]["navodilo"])
+
 st.subheader(podnaslov_naloga)
 st.info(f"**\"{vpisani_stavek}\"**")
 
@@ -210,8 +253,11 @@ st.info(f"**\"{vpisani_stavek}\"**")
 cisti_vnos = vpisani_stavek.strip().upper()
 if cisti_vnos == "A":
     st.write("---")
-    txt_naslov, txt_slika, txt_video = vizualni_naslovi[jezik]
-    st.subheader(f"🎬 {txt_naslov} \"A\"")
+    txt_naslov = lokalizacija_mediji[jezik]["naslov"]
+    txt_slika = lokalizacija_mediji[jezik]["slika"]
+    txt_video = lokalizacija_mediji[jezik]["video"]
+    
+    st.subheader(f"{txt_naslov} \"A\"")
     
     col1, col2 = st.columns(2)
     
@@ -220,16 +266,14 @@ if cisti_vnos == "A":
         if os.path.exists("A_2.png"):
             st.image("A_2.png", caption="Anatomski prerez / Articulación", use_container_width=True)
         else:
-            st.warning("Datoteka 'A_2.png' še ni naložena na GitHub.")
+            st.warning("Datoteka 'A_6.png' še ni naložena na GitHub.")
             
     with col2:
         st.write(f"**{txt_video}:**")
         if os.path.exists("A.mp4"):
             st.video("A.mp4")
-        elif os.path.exists("A.wmv"):
-            st.warning("Format .wmv ni podprt. Prosimo, pretvorite 'A.wmv' v 'A.mp4' in ga naložite na GitHub.")
         else:
-            st.warning("Datoteka 'A.mp4' še ni naložena na GitHub.")
+            st.warning("Datoteka 'A.mp4' (pretvorjen video) še ni naložena na GitHub.")
 
 if st.button(gumb_poslusaj):
     with st.spinner("Generiranje..."):
