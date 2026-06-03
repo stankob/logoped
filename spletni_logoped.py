@@ -3,7 +3,8 @@ from streamlit_mic_recorder import mic_recorder
 from google import genai
 from google.genai import types
 import requests
-import time  # Potrebno za časovni zamik med ponovnimi poskusi
+import time
+import os  # Potrebno za preverjanje obstoja datotek
 
 # 1. Branje skritih API ključev iz nastavitev strežnika (Secrets)
 try:
@@ -18,8 +19,6 @@ def ustvari_pravilen_govor(tekst, jezik_koda):
     try:
         url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={tts_key}"
         
-        # REGIONALNI PREKLOP: Če gre za mk-MK, uporabi sr-RS, ki preverjeno deluje 
-        # in makedonsko cirilico prebere čisto ter tekoče, brez napake 400.
         iskani_jezik = "sr-RS" if jezik_koda == "mk-MK" else jezik_koda
         
         payload = {
@@ -56,6 +55,18 @@ skupina = st.sidebar.radio(
     ("Logoped (Strokovno)", "Starš (Enostavno / Za roditelje)", "Otrok (Igrivo / Za djecu)")
 )
 
+# Naslovi za vizualni modul glede na jezik vmesnika
+vizualni_naslovi = {
+    "Slovenščina": ("Vizualna pomoč za izgovarjanje glasu", "Položaj govorilnih organov", "Demonstracija izgovarjave"),
+    "Hrvatski": ("Vizualna pomoć za izgovor glasa", "Položaj govornih organa", "Demonstracija izgovora"),
+    "Srpski": ("Vizualna pomoć za izgovor glasa", "Položaj govornih organa", "Demonstracija izgovora"),
+    "Bosanski": ("Vizualna pomoć za izgovor glasa", "Položaj govornih organa", "Demonstracija izgovora"),
+    "Македонски": ("Визуелна помош за изговор на гласот", "Положба на говорните органи", "Демонстрација на изговорот"),
+    "English": ("Visual speech articulation assistance", "Position of speech organs", "Pronunciation demonstration"),
+    "Español": ("Asistencia visual para la articulación", "Posición de los órganos del habla", "Demostración de pronunciación"),
+    "Italiano": ("Assistenza visiva per l'articolazione", "Posizione degli organi fonatori", "Dimostrazione della pronuncia")
+}
+
 # 3. Nastavitev lokalizacije in ISO jezikovnih kod za vsak jezik
 if jezik == "Slovenščina":
     naslov, podnaslov = "Pametni AI Logopedski Asistent", "Aplikacija za preverjanje pravilnosti izgovarjave s pomočjo umetne inteligence."
@@ -67,11 +78,11 @@ if jezik == "Slovenščina":
     tts_lang = "sl-SI"
     
     if skupina == "Logoped (Strokovno)":
-        prompt_za_ai = "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno izgovori: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitation. Odgovori izključno v slovenskem jeziku, resno in strokovno."
+        prompt_za_ai = "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno izgovori: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitacijo. Odgovori izključno v slovenskem jeziku, resno in strokovno."
     elif skupina == "Starš (Enostavno / Za roditelje)":
-        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka. Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktčna, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka.  Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktčna, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
     else:
-        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki. Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
 
 elif jezik == "Hrvatski":
     naslov, podnaslov = "Pametni AI Logopedski Asistent", "Aplikacija za provjeru pravilnosti izgovora pomoću umjetne inteligencije."
@@ -83,7 +94,7 @@ elif jezik == "Hrvatski":
     tts_lang = "hr-HR"
     
     if skupina == "Logoped (Strokovno)":
-        prompt_za_ai = "Djeluješ kao stručni logoped. Pacijent je dobio zadatak da glasno i jasno pročita rečenicu: '{stavek}'. Poslušaj snimku i: 1. Točno zapiši tekst koji čuješ. 2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku. 3. Podaj stručnu ocjenu i koristan savjet za rehabilitaciju. Odgovori izključivo na hrvatskom jeziku."
+        prompt_za_ai = "Djeluješ kao stručni logoped. Pacijent je dobio zadatak da glasno i jasno pročita rečenicu: '{stavek}'. Poslušaj snimku i: 1. Točno zapiši tekst koji čuješ. 2. Stručno procijeni pravilnost izgovora glasova na hrvatskom jeziku. 3. Podaj stručnu ocjenju i koristan savjet za rehabilitaciju. Odgovori izključivo na hrvatskom jeziku."
     elif skupina == "Starš (Enostavno / Za roditelje)":
         prompt_za_ai = "Djeluješ kao srdačan logopedski savjetnik koji razgovara s RODITELJIMA djeteta. Dijete je pokušalo izgovoriti: '{stavek}'. Poslušaj snimku i: 1. Na vrlo jednostavan način, BEZ kompliciranih stručnih izraza, objasni roditeljima koliko je dobro dijete izgovorilo zadani glas ili riječ. 2. Jasno ukaži gdje je nastao problem (npr. ako je glas zamijenjen drugim). 3. Daj im 2 praktična savjeta kako mogu vježbati kroz svakodnevnu igru kod kuće. Odgovori na hrvatskom jeziku."
     else:
@@ -165,11 +176,11 @@ elif jezik == "Español":
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = "Eres un logopeda profesional (terapeuta del habla). El paciente tenía la tarea de leer en voz alta: '{stavek}'. Escucha el audio y: 1. Proporciona una transcripción exacta de lo que escuchas. 2. Evalúa clínicamente la articulación de los fonemas y la precisión de la pronunciación utilizando terminología estándar de logopedia. 3. Brinda recomendaciones profesionales y ejercicios de rehabilitación. Responde profesionalmente y estrictamente en español."
     elif skupina == "Starš (Enostavno / Za roditelje)":
-        prompt_za_ai = "Eres un consultor de logopedia amable y motivador que habla directamente con los PADRES del niño. El niño intentó pronunciar: '{stavek}'. Escucha el audio y: 1. Explica qué tan bien pronunció el niño el sonido o la palabra objetivo de una manera muy simple, completamente SIN jerga médica complicada. 2. Resalta claramente dónde tuvo dificultades (p. ej., sonidos omitidos o sustituidos). 3. Proporciona 2 consejos prácticos y divertidos que puedan hacer juntos en casa todos los días para practicar jugando. Responde con calidez en español."
+        prompt_za_ai = "Eres un consultor de logopedia amable y motivador que habla directamente con los PADRES del niño. El niño intentó pronunciar: '{stavek}'. Escucha el audio y: 1. Explica qué tan bien pronunció el niño el sonido o la palabra objetivo de una manera muy simple, completamente SIN jerga médica complicada. 2. Resalta claramente dónde tuvo dificultades (p. ej., sonidos u omitidos o sustituidos). 3. Proporciona 2 consejos prácticos y divertidos que puedan hacer juntos en casa todos los días para practicar jugando. Responde con calidez en español."
     else:
         prompt_za_ai = "Eres un asistente de logopedia con IA amable, cariñoso y divertido que habla directamente al NIÑO (en forma de 'tú'). El niño intentó leer: '{stavek}'. Escucha el audio y: 1. Felicita al niño por su esfuerzo con gran entusiasmo y muchos emojis divertidos (🌟, 🏆, 🐸). 2. Explícale de forma sencilla, amigable y como un cuento de hadas si un sonido le 'jugó una mala pasada'. 3. Dale 1 pequeño juego o truco divertido para practicar ese sonido en casa. Responde en español."
 
-else:  # Italiano (NOVO)
+else:  # Italiano
     naslov, podnaslov = "Assistente Logopedico Intelligente con IA", "Un'applicazione basata su IA per valutare e migliorare l'accuratezza della pronuncia."
     label_vnos, stavek_default = "Modifica o inserisci una frase o un suono per il paziente:", "Trentatré trentini entrarono a Trento tutti e trentatré trotterellando."
     podnaslov_naloga, gumb_poslusaj = "Compito per il paziente:", "🔊 Ascolta la pronuncia corretta"
@@ -195,6 +206,31 @@ vpisani_stavek = st.text_input(label_vnos, value=stavek_default)
 st.subheader(podnaslov_naloga)
 st.info(f"**\"{vpisani_stavek}\"**")
 
+# DOLOČITEV VIZUALNEGA DELA ZA GLAS "A"
+cisti_vnos = vpisani_stavek.strip().upper()
+if cisti_vnos == "A":
+    st.write("---")
+    txt_naslov, txt_slika, txt_video = vizualni_naslovi[jezik]
+    st.subheader(f"🎬 {txt_naslov} \"A\"")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.write(f"**{txt_slika}:**")
+        if os.path.exists("A_2.png"):
+            st.image("A_2.png", caption="Anatomski prerez / Articulación", use_container_width=True)
+        else:
+            st.warning("Datoteka 'A_2.png' še ni naložena na GitHub.")
+            
+    with col2:
+        st.write(f"**{txt_video}:**")
+        if os.path.exists("A.mp4"):
+            st.video("A.mp4")
+        elif os.path.exists("A.wmv"):
+            st.warning("Format .wmv ni podprt. Prosimo, pretvorite 'A.wmv' v 'A.mp4' in ga naložite na GitHub.")
+        else:
+            st.warning("Datoteka 'A.mp4' še ni naložena na GitHub.")
+
 if st.button(gumb_poslusaj):
     with st.spinner("Generiranje..."):
         avdio_podatki = ustvari_pravilen_govor(vpisani_stavek, tts_lang)
@@ -218,9 +254,8 @@ if avdio_posnetek:
     st.write("---")
     st.subheader(ai_naslov)
     
-    # MEHANIZEM ZA PONOVNO POSLJUŠANJE (RETRY) V PRIMERU NAPAKE 503
     maks_poskusov = 3
-    cas_cakanja = 3  # sekunde
+    cas_cakanja = 3
     uspesno = False
     
     with st.spinner(ai_potek):
@@ -241,7 +276,7 @@ if avdio_posnetek:
                 )
                 st.write(response.text)
                 uspesno = True
-                break  # Če uspe, takoj izstopimo iz zanke
+                break
                 
             except Exception as e:
                 if "503" in str(e) or "demand" in str(e).lower() or "unavailable" in str(e).lower():
