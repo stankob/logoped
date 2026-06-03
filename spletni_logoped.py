@@ -13,23 +13,23 @@ except Exception:
     st.error("Napaka: Ključi niso pravilno nastavljeni v Streamlit Secrets. Prosimo, uredite nastavitve.")
     st.stop()
 
-# Stabilna pretvorba besedila v govor (TTS) s pravim makedonskim glasom
+# Stabilna pretvorba besedila v govor (TTS) z regionalnim preklopom za makedonščino
 def ustvari_pravilen_govor(tekst, jezik_koda):
     try:
         url = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={tts_key}"
         
+        # REGIONALNI PREKLOP: Če gre za mk-MK, uporabi sr-RS, ki preverjeno deluje 
+        # in makedonsko cirilico prebere čisto ter tekoče, brez napake 400.
+        iskani_jezik = "sr-RS" if jezik_koda == "mk-MK" else jezik_koda
+        
         payload = {
             "input": {"text": tekst},
             "voice": {
-                "languageCode": jezik_koda,
+                "languageCode": iskani_jezik,
                 "ssmlGender": "FEMALE"
             },
             "audioConfig": {"audioEncoding": "MP3"}
         }
-        
-        # POSEBNOST ZA MAKEDONŠČINO: Google zahteva eksplicitno ime nevronskega glasu
-        if jezik_koda == "mk-MK":
-            payload["voice"]["name"] = "mk-MK-Neural2-A"
         
         response = requests.post(url, json=payload)
         
@@ -69,9 +69,9 @@ if jezik == "Slovenščina":
     if skupina == "Logoped (Strokovno)":
         prompt_za_ai = "Deluješ kot strokovni logoped. Pacient je dobil nalogo, da glasno in jasno izgovori: '{stavek}'. Poslušaj posnetek in: 1. Natančno zapiši besedilo, ki ga slišiš. 2. Strokovno oceni pravilnost izgovarjave glasov v slovenščini (uporabi logopedsko terminologijo). 3. Podaj strokovno oceno in koristen nasvet za rehabilitacijo. Odgovori izključno v slovenskem jeziku, resno in strokovno."
     elif skupina == "Starš (Enostavno / Za roditelje)":
-        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka. Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktična, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, spodbuden logopedski svetovalec, ki govori z STARŠI otroka.  Otrok je poskusil izgovoriti: '{stavek}'. Poslušaj posnetek in: 1. Na zelo preprost način, BREZ zapletenih strokovnih izrazov, staršem razloži, kako dobro je otrok izgovoril ciljni glas ali besedo. 2. Jasno izpostavi, kje se je zataknilo (npr. če je glas izpustil ali zamenjal). 3. Podaj jim 2 praktična, vsakodnevna nasveta, kako lahko to napako z otrokom popravljata in vadita doma med igro. Odgovori toplo in razumljivo v slovenščini."
     else:
-        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki. Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
+        prompt_za_ai = "Deluješ kot prijazen, topel in igriv logopedski asistent, ki govori neposredno z OTROKOM v ti-obliki.  Otrok je poskusil prebrati stavek: '{stavek}'. Poslušaj posnetek in: 1. Pohvali otroka za trud z veliko navdušenja in emojiji (🌟, 🏆, 🐸). 2. Na preprost, pravljičen način mu povej, če je kakšen glas 'ponagajal'. 3. Podaj mu preprosto, zabavno igrico ali trik za trening. Odgovori v slovenščini."
 
 elif jezik == "Hrvatski":
     naslov, podnaslov = "Pametni AI Logopedski Asistent", "Aplikacija za provjeru pravilnosti izgovora pomoću umjetne inteligencije."
@@ -87,7 +87,7 @@ elif jezik == "Hrvatski":
     elif skupina == "Starš (Enostavno / Za roditelje)":
         prompt_za_ai = "Djeluješ kao srdačan logopedski savjetnik koji razgovara s RODITELJIMA djeteta. Dijete je pokušalo izgovoriti: '{stavek}'. Poslušaj snimku i: 1. Na vrlo jednostavan način, BEZ kompliciranih stručnih izraza, objasni roditeljima koliko je dobro dijete izgovorilo zadani glas ili riječ. 2. Jasno ukaži gdje je nastao problem (npr. ako je glas zamijenjen drugim). 3. Daj im 2 praktična savjeta kako mogu vježbati kroz svakodnevnu igru kod kuće. Odgovori na hrvatskom jeziku."
     else:
-        prompt_za_ai = "Djeluješ kao drag, topao i razigran logopedski asistent koji govori izravno DJETETU (u ti-obliku). Dijete je pokušalo pročitati rečenicu: '{stavek}'. Poslušaj snimku i: 1. Pohvali dijete za trud s puno entuzijazma i koristi emojije (🌟, 🚀, 🦁). 2. Na vrlo jednostavan način reci mu ako ga je neki glas 'pobijedio'. 3. Daj mu jednu jednostavnu, zabavnu igricu za vježbu. Odgovori na hrvatskom jeziku."
+        prompt_za_ai = "Djeluješ kao drag, topao i razigran logopedski asistent koji govori izravno DJETETU (u ti-obliku). Dijete je pokušalo pročitado rečenicu: '{stavek}'. Poslušaj snimku i: 1. Pohvali dijete za trud s puno entuzijazma i koristi emojije (🌟, 🚀, 🦁). 2. Na vrlo jednostavan način reci mu ako ga je neki glas 'pobijedio'. 3. Daj mu jednu jednostavnu, zabavnu igricu za vježbu. Odgovori na hrvatskom jeziku."
 
 elif jezik == "Srpski":
     naslov, podnaslov = "Pametni AI Logopedski Asistent", "Aplikacija za proveru pravilnosti izgovora pomoću veštačke inteligencije."
@@ -228,7 +228,6 @@ if avdio_posnetek:
                 break  # Če uspe, takoj izstopimo iz zanke
                 
             except Exception as e:
-                # Preverimo, če gre za preobremenitev strežnika (napaka 503 ali 'high demand')
                 if "503" in str(e) or "demand" in str(e).lower() or "unavailable" in str(e).lower():
                     if poskus < maks_poskusov:
                         st.warning(obvestilo_gnezdo.format(cas_cakanja))
